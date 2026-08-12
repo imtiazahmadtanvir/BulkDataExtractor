@@ -1,9 +1,16 @@
 <template>
-    <lightning-card title="Bulk Product Import" icon-name="standard:product">
+
+    <lightning-card 
+        title="Bulk Product Import"
+        icon-name="standard:product">
 
         <div class="slds-p-around_medium">
 
-            <!-- File Upload -->
+
+            <!-- ==========================
+                 FILE UPLOAD SECTION
+            =========================== -->
+
             <lightning-input
                 type="file"
                 label="Select CSV File"
@@ -11,62 +18,217 @@
                 onchange={handleFileChange}>
             </lightning-input>
 
-            <!-- Selected File -->
+
             <template if:true={fileName}>
-                <div class="slds-m-top_small">
-                    <p>
-                        <strong>Selected File:</strong>
-                        {fileName}
-                    </p>
-                </div>
+
+                <p class="slds-m-top_small">
+                    <b>Selected File:</b>
+                    {fileName}
+                </p>
+
             </template>
 
-            <!-- Upload Button -->
-            <div class="slds-m-top_medium">
 
-                <lightning-button
-                    label="Upload CSV"
-                    variant="brand"
-                    onclick={handleUpload}
-                    disabled={isUploadDisabled}>
-                </lightning-button>
 
-            </div>
+            <lightning-button
+                class="slds-m-top_medium"
+                variant="brand"
+                label="Upload CSV"
+                onclick={handleUpload}
+                disabled={isUploadDisabled}>
+            </lightning-button>
 
-            <!-- Processing Message -->
+
+
+            <!-- ==========================
+                 PROCESSING SPINNER
+            =========================== -->
+
             <template if:true={isProcessing}>
+
                 <div class="slds-m-top_medium">
 
                     <lightning-spinner
                         alternative-text="Processing">
                     </lightning-spinner>
 
-                    <p class="slds-m-top_medium">
-                        Processing CSV file. Please wait...
+                    <p>
+                        Processing CSV file...
                     </p>
 
                 </div>
+
             </template>
 
-            <!-- Error Message -->
+
+
+            <!-- ==========================
+                 MESSAGE
+            =========================== -->
+
+
             <template if:true={errorMessage}>
-                <div class="slds-m-top_medium">
-                    <div class="slds-notify slds-notify_alert slds-theme_error">
-                        {errorMessage}
-                    </div>
+
+                <div class="slds-box slds-theme_error slds-m-top_medium">
+
+                    {errorMessage}
+
                 </div>
+
             </template>
 
-            <!-- Success Message -->
+
             <template if:true={successMessage}>
-                <div class="slds-m-top_medium">
-                    <div class="slds-notify slds-notify_alert slds-theme_success">
-                        {successMessage}
-                    </div>
+
+                <div class="slds-box slds-theme_success slds-m-top_medium">
+
+                    {successMessage}
+
                 </div>
+
             </template>
+
+
+
+
+
+            <!-- ==========================
+                 IMPORT SUMMARY
+            =========================== -->
+
+            <template if:true={importBatch}>
+
+
+                <lightning-card
+                    title="Import Summary"
+                    class="slds-m-top_medium">
+
+
+                    <div class="slds-p-around_medium">
+
+
+                        <p>
+                            <b>File Name:</b>
+                            {importBatch.File_Name__c}
+                        </p>
+
+
+                        <p>
+                            <b>Status:</b>
+                            {importBatch.Status__c}
+                        </p>
+
+
+                        <p>
+                            <b>Total Rows:</b>
+                            {importBatch.Total_Rows__c}
+                        </p>
+
+
+                        <p>
+                            <b>Success Count:</b>
+                            {importBatch.Success_Count__c}
+                        </p>
+
+
+                        <p>
+                            <b>Failure Count:</b>
+                            {importBatch.Failure_Count__c}
+                        </p>
+
+
+                    </div>
+
+
+                </lightning-card>
+
+
+            </template>
+
+
+
+
+
+            <!-- ==========================
+                 FILTER BUTTONS
+            =========================== -->
+
+
+            <template if:true={rowResults}>
+
+
+                <div class="slds-m-top_medium">
+
+
+                    <lightning-button
+                        label="All"
+                        data-filter="All"
+                        onclick={handleFilterChange}>
+                    </lightning-button>
+
+
+                    <lightning-button
+                        class="slds-m-left_small"
+                        label="Success"
+                        data-filter="Success"
+                        onclick={handleFilterChange}>
+                    </lightning-button>
+
+
+                    <lightning-button
+                        class="slds-m-left_small"
+                        label="Failed"
+                        data-filter="Failed"
+                        onclick={handleFilterChange}>
+                    </lightning-button>
+
+
+                </div>
+
+
+
+            </template>
+
+
+
+
+
+
+            <!-- ==========================
+                 RESULT TABLE
+            =========================== -->
+
+
+            <template if:true={filteredResults.length}>
+
+
+                <lightning-card
+                    title="Import Row Results"
+                    class="slds-m-top_medium">
+
+
+                    <lightning-datatable
+
+                        key-field="Id"
+
+                        data={filteredResults}
+
+                        columns={columns}>
+
+                    </lightning-datatable>
+
+
+                </lightning-card>
+
+
+            </template>
+
+
 
         </div>
 
+
     </lightning-card>
+
+
 </template>
