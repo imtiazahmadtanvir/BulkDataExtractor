@@ -485,6 +485,40 @@ export default class ProductImport extends LightningElement {
         return this.rowResults || [];
     }
 
+    get isAllVariant() {
+        return this.selectedFilter === 'All' ? 'brand' : 'neutral';
+    }
+
+    get isSuccessVariant() {
+        return this.selectedFilter === 'Success' ? 'brand' : 'neutral';
+    }
+
+    get isFailedVariant() {
+        return this.selectedFilter === 'Failed' ? 'brand' : 'neutral';
+    }
+
+    get statusBadgeClass() {
+        if (!this.importBatch) return 'status-badge';
+        switch (this.importBatch.Status__c) {
+            case 'Completed':
+                return 'status-badge status-completed';
+            case 'Completed with Errors':
+                return 'status-badge status-errors';
+            case 'Processing':
+                return 'status-badge status-processing';
+            default:
+                return 'status-badge status-queued';
+        }
+    }
+
+    get hasResults() {
+        return this.filteredResults && this.filteredResults.length > 0;
+    }
+
+    get isResultEmpty() {
+        return this.importBatch && (!this.filteredResults || this.filteredResults.length === 0);
+    }
+
 
 
 
