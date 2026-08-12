@@ -155,9 +155,8 @@
     <externalSharingModel>Private</externalSharingModel>
     <label>Product Import</label>
     <nameField>
-        <displayFormat>PI-{00000}</displayFormat>
-        <label>Product Import Number</label>
-        <type>AutoNumber</type>
+        <label>Product Name</label>
+        <type>Text</type>
     </nameField>
     <pluralLabel>Product Imports</pluralLabel>
     <searchLayouts></searchLayouts>
