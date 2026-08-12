@@ -460,91 +460,29 @@ export default class ProductImport extends LightningElement {
      */
     async loadRowResults() {
 
-
         this.rowResults =
-
             await getRowResults({
-
-                batchId:
-                    this.batchId
-
+                batchId: this.batchId,
+                filterStatus: this.selectedFilter
             });
-
-
     }
-
-
-
-
-
 
 
     /*
      * Filter
      */
-    handleFilterChange(event) {
-
+    async handleFilterChange(event) {
 
         this.selectedFilter =
-
             event.target.dataset.filter;
 
-
+        await this.loadRowResults();
     }
-
-
-
 
 
     get filteredResults() {
 
-
-        if (
-
-            this.selectedFilter === 'Success'
-
-        ) {
-
-
-            return this.rowResults.filter(
-
-                row =>
-
-                    row.Status__c === 'Success'
-
-            );
-
-
-        }
-
-
-
-
-        if (
-
-            this.selectedFilter === 'Failed'
-
-        ) {
-
-
-            return this.rowResults.filter(
-
-                row =>
-
-                    row.Status__c === 'Failed'
-
-            );
-
-
-        }
-
-
-
-
-
-        return this.rowResults;
-
-
+        return this.rowResults || [];
     }
 
 

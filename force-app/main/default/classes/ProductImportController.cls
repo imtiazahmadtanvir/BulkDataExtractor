@@ -173,7 +173,8 @@ public with sharing class ProductImportController {
      */
     @AuraEnabled(cacheable=true)
     public static List<Import_Row_Result__c> getRowResults(
-        Id batchId
+        Id batchId,
+        String filterStatus
     ) {
 
         if (batchId == null) {
@@ -181,6 +182,23 @@ public with sharing class ProductImportController {
             throw new AuraHandledException(
                 'Import Batch Id is required.'
             );
+        }
+
+        if (String.isNotBlank(filterStatus) && filterStatus != 'All') {
+
+            return [
+                SELECT
+                    Id,
+                    Row_Number__c,
+                    Status__c,
+                    Error_Message__c,
+                    Raw_Row_Data__c
+                FROM Import_Row_Result__c
+                WHERE Import_Batch__c = :batchId
+                AND Status__c = :filterStatus
+                ORDER BY Row_Number__c ASC
+                LIMIT 2000
+            ];
         }
 
         return [
@@ -193,6 +211,7 @@ public with sharing class ProductImportController {
             FROM Import_Row_Result__c
             WHERE Import_Batch__c = :batchId
             ORDER BY Row_Number__c ASC
+            LIMIT 2000
         ];
     }
 }

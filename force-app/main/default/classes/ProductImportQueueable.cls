@@ -386,7 +386,7 @@ public with sharing class ProductImportQueueable implements Queueable {
                     lines,
                     columnMap
                 ),
-                100
+                2000
             );
 
         } catch (Exception e) {
@@ -429,6 +429,14 @@ public with sharing class ProductImportQueueable implements Queueable {
             fields.add('');
 
             return fields;
+        }
+
+        /*
+         * Fast Path: Native split for unquoted lines.
+         */
+        if (!line.contains('"')) {
+
+            return line.split(',', -1);
         }
 
         String currentField = '';
