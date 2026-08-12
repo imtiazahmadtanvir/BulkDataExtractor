@@ -1,58 +1,99 @@
-# Salesforce DX Project
+# Bulk Data Extractor (Queueable + Batch Apex + LWC)
 
-Salesforce DX is a development approach that brings source-driven development, team collaboration, and continuous integration to the Salesforce Platform. Instead of working directly in an org through a web browser, you work with metadata as source files in a local DX project, track changes in version control, and deploy through automated processes.
+An enterprise-grade, bulk-safe Salesforce data import engine designed to upload, parse, validate, and process CSV exports in bulk without hitting governor limits. Includes per-row error tracking and an interactive Lightning Web Component (LWC) interface.
 
-This project template gets you started with the tools and structure you need to build Salesforce applications using source control, scratch orgs, and the Salesforce CLI.
+---
 
-## Prerequisites
+## 🌟 Key Features
 
-Before you start, make sure you have:
+- **Asynchronous Execution**: Uses Queueable to Batch Apex chaining to safely process large files off the synchronous thread.
+- **Bulk Safe & Fault Tolerant**: Performs `Database.upsert` with `allOrNone=false`, ensuring valid rows are saved even if individual rows fail.
+- **Stateful Duplicate SKU Detection**: Tracks duplicate SKUs across all batch chunks using `Database.Stateful`.
+- **Robust CSV Parser**: Custom state-machine CSV parser that supports quoted fields, escaped quotes (`""`), embedded commas, and line breaks.
+- **Comprehensive Failure Handling**: Validates required headers, missing fields, numeric data types (`Price__c`), blank rows, duplicate SKUs, and DML validation errors.
+- **Detailed Audit Log**: Generates an `Import_Row_Result__c` record for every single row in the CSV (Success or Failed with exact error messages).
+- **Interactive LWC Interface**: Displays real-time status polling (`Queued` → `Processing` → `Completed`) and an interactive datatable with filters (`All`, `Success`, `Failed`).
 
-- **Salesforce CLI** - Download from [developer.salesforce.com/tools/salesforcecli](https://developer.salesforce.com/tools/salesforcecli). See [Install Salesforce CLI](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_install_cli.htm) for details.
-- **VS Code with Salesforce Extension Pack** - See [Installation Instructions](https://developer.salesforce.com/docs/platform/sfvscode-extensions/guide/install.html) for details. Includes the Agentforce Vibes extension.
-- **A development org** - Sign up for a free Developer Edition org [here](https://developer.salesforce.com/signup).
-- **Dev Hub enabled** (optional, required to create scratch orgs) - You can enable Dev Hub in your development org under Setup > Dev Hub.  See [Provide Developers Access to Salesforce DX Tools](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_setup_dx_tools.htm).
+---
 
-## Project Structure
+## 📊 Data Model
 
-Your DX project follows this structure:
+### 1. `Product_Import__c` (Target Object)
+| Field | Type | Properties | Description |
+| :--- | :--- | :--- | :--- |
+| `SKU__c` | Text | Unique, External ID | External unique key used for upserting |
+| `Name` | Text | Standard Name | Product Name |
+| `Price__c` | Currency | Scale 2, Precision 18 | Product Unit Price |
+| `Category__c` | Text | | Product Category |
+| `Region__c` | Text | | Product Region |
 
-- **`force-app/main/default/`** - Your metadata source files live in this default package directory. You can configure additional package directories in the `sfdx-project.json` file.
-- **`config/`** - Scratch org definitions and project settings
-- **`scripts/`** - Automation scripts for common tasks
-- **`sfdx-project.json`** - Project manifest that defines package directories, namespace, API version, and other project-level settings
+### 2. `Import_Batch__c` (Parent Batch Record)
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `File_Name__c` | Text | Name of the uploaded CSV file |
+| `Total_Rows__c` | Number | Total data rows found in the CSV |
+| `Success_Count__c` | Number | Count of successfully upserted rows |
+| `Failure_Count__c` | Number | Count of failed rows |
+| `Status__c` | Picklist | `Queued`, `Processing`, `Completed`, `Completed with Errors` |
 
-See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm).
+### 3. `Import_Row_Result__c` (Row Level Audit Log)
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `Import_Batch__c` | Master-Detail | Parent `Import_Batch__c` reference |
+| `Row_Number__c` | Number | Original CSV row index |
+| `Status__c` | Picklist | `Success` or `Failed` |
+| `Error_Message__c` | Long Text Area | Failure reason or validation error message |
+| `Raw_Row_Data__c` | Long Text Area | Raw line content from CSV |
 
-## Get Started
+---
 
-Ready to start developing? The [Get Started with Salesforce DX](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_get_started_dx.htm) guide walks you through your first project, from creating a scratch org to creating a simple Apex class or LWC to deploying your code to a sandbox.
+## 🏗️ Architecture & Component Flow
 
-## Common Salesforce CLI Commands
+```
+[ LWC UI: productImport ]
+       │  (Upload CSV Base64)
+       ▼
+[ ProductImportController.cls ]
+       │  1. Creates ContentVersion (Salesforce File)
+       │  2. Inserts Import_Batch__c (Status = Queued)
+       │  3. Enqueues Queueable Job
+       ▼
+[ ProductImportQueueable.cls ]
+       │  1. Parses CSV Header & validates required columns
+       │  2. Updates Import_Batch__c (Status = Processing)
+       │  3. Executes Batch Apex (Scope = 100)
+       ▼
+[ ProductImportBatch.cls ] (Stateful)
+       │  1. Parses rows via parseCsvLine()
+       │  2. Validates data types & duplicate SKUs
+       │  3. Performs Database.upsert(products, SKU__c, false)
+       │  4. Creates Import_Row_Result__c per row
+       │  5. finish(): Updates Import_Batch__c status & counts
+       ▼
+[ LWC UI: productImport ] (Polls & displays datatable + filters)
+```
 
-Here are common CLI commands that you'll use the most:
+---
 
-- `sf org login web`: Authorize an org
-- `sf org open`: Open your org in a browser
-- `sf org create scratch`: Create a scratch org
-- `sf project deploy start`: Deploy metadata to your org
-- `sf project retrieve start`: Retrieve metadata from your org
-- `sf template generate <artifact>`: Scaffold new components, such as Apex classes and triggers, LWC components, Lightning apps, and more
-- `sf apex <command>`: Run Apex tests, run anonymous Apex blocks, and view logs
-- `sf data <command>`: Work with test data
-- `sf alias <command>`: Manage org aliases
-- `sf config <command>`: Configure CLI settings
+## 🚀 Deployment Instructions
 
-## Use Agentforce Vibes to Build Lightning Apps
+Deploy the project metadata to your target Salesforce org using the Salesforce CLI:
 
-Transform your ideas into custom Lightning apps that extend CRM workflows directly in Lightning Experience. Through natural conversations with Agentforce Vibes, implement custom objects and fields, complex business logic, and dynamic UI components. See [Build a Lightning App Using Agentforce Vibes](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/lexapp-overview.html).
+```bash
+sf project deploy start --source-dir force-app/main/default
+```
 
-## Additional Resources
+---
 
-- [Agentforce Vibes Developer Guide](https://developer.salesforce.com/docs/platform/einstein-for-devs/guide/einstein-overview.html)
-- [Salesforce CLI Installation Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/)
-- [Salesforce CLI Plugin Development Guide](https://developer.salesforce.com/docs/platform/salesforce-cli-plugin/guide/conceptual-overview.html)
-- [Salesforce VS Code Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
+## 🧪 How to Use
 
+1. Open Salesforce and navigate to the page where the **`productImport`** Lightning Web Component is placed.
+2. Select a CSV file containing the required headers:
+   ```csv
+   SKU,Name,Price,Category,Region
+   SKU-1001,Laptop Pro 15,1299.99,Electronics,North America
+   SKU-1002,Wireless Mouse,29.50,Accessories,Europe
+   ```
+3. Click **Upload CSV**.
+4. Monitor the status update in real-time.
+5. Review the summary metrics and use the **All**, **Success**, or **Failed** filter buttons to inspect individual row results.
