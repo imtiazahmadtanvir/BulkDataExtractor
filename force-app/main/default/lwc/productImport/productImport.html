@@ -1,0 +1,72 @@
+<template>
+    <lightning-card title="Bulk Product Import" icon-name="standard:product">
+
+        <div class="slds-p-around_medium">
+
+            <!-- File Upload -->
+            <lightning-input
+                type="file"
+                label="Select CSV File"
+                accept=".csv"
+                onchange={handleFileChange}>
+            </lightning-input>
+
+            <!-- Selected File -->
+            <template if:true={fileName}>
+                <div class="slds-m-top_small">
+                    <p>
+                        <strong>Selected File:</strong>
+                        {fileName}
+                    </p>
+                </div>
+            </template>
+
+            <!-- Upload Button -->
+            <div class="slds-m-top_medium">
+
+                <lightning-button
+                    label="Upload CSV"
+                    variant="brand"
+                    onclick={handleUpload}
+                    disabled={isUploadDisabled}>
+                </lightning-button>
+
+            </div>
+
+            <!-- Processing Message -->
+            <template if:true={isProcessing}>
+                <div class="slds-m-top_medium">
+
+                    <lightning-spinner
+                        alternative-text="Processing">
+                    </lightning-spinner>
+
+                    <p class="slds-m-top_medium">
+                        Processing CSV file. Please wait...
+                    </p>
+
+                </div>
+            </template>
+
+            <!-- Error Message -->
+            <template if:true={errorMessage}>
+                <div class="slds-m-top_medium">
+                    <div class="slds-notify slds-notify_alert slds-theme_error">
+                        {errorMessage}
+                    </div>
+                </div>
+            </template>
+
+            <!-- Success Message -->
+            <template if:true={successMessage}>
+                <div class="slds-m-top_medium">
+                    <div class="slds-notify slds-notify_alert slds-theme_success">
+                        {successMessage}
+                    </div>
+                </div>
+            </template>
+
+        </div>
+
+    </lightning-card>
+</template>
