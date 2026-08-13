@@ -8,10 +8,7 @@
         <div class="app-header">
             <div class="header-title-group">
                 <div class="header-icon-wrapper">
-                    <lightning-icon 
-                        icon-name="utility:upload" 
-                        size="small" 
-                        variant="inverse">
+                    <lightning-icon icon-name="utility:upload" size="small" variant="inverse">
                     </lightning-icon>
                 </div>
                 <div>
@@ -29,33 +26,23 @@
 
             <div class="upload-card-content">
 
-                <lightning-input
-                    type="file"
-                    label="Select CSV File"
-                    accept=".csv"
-                    onchange={handleFileChange}>
+                <lightning-input type="file" label="Select CSV File" accept=".csv" onchange={handleFileChange}>
                 </lightning-input>
 
                 <template if:true={fileName}>
                     <div class="file-selected-badge">
-                        <lightning-icon 
-                            icon-name="doctype:csv" 
-                            size="small">
+                        <lightning-icon icon-name="doctype:csv" size="small">
                         </lightning-icon>
                         <span>{fileName}</span>
                     </div>
                 </template>
 
-            </div>
+                <div class="action-bar slds-align_absolute-center">
+                    <lightning-button variant="brand" label="Upload CSV file for processing" icon-name="utility:upload"
+                        onclick={handleUpload} disabled={isUploadDisabled}>
+                    </lightning-button>
+                </div>
 
-            <div class="action-bar">
-                <lightning-button
-                    variant="brand"
-                    label="Upload CSV"
-                    icon-name="utility:upload"
-                    onclick={handleUpload}
-                    disabled={isUploadDisabled}>
-                </lightning-button>
             </div>
 
         </div>
@@ -64,16 +51,20 @@
         <!-- ============================================================
              PROCESSING INDICATOR
              ============================================================ -->
+        <!-- ============================================================
+             PROCESSING INDICATOR
+             ============================================================ -->
         <template if:true={isProcessing}>
 
-            <div class="slds-m-top_medium slds-p-around_medium slds-box slds-theme_default slds-align_absolute-center">
-                <lightning-spinner 
-                    alternative-text="Processing CSV" 
-                    size="medium">
-                </lightning-spinner>
-                <div class="slds-m-left_large">
-                    <h3 class="slds-text-heading_small slds-font-weight_bold">Processing Data Import...</h3>
-                    <p class="slds-text-body_small slds-text-color_weak">Parsing CSV records and executing bulk upsert batch job.</p>
+            <div class="processing-banner">
+                <div class="spinner-container">
+                    <lightning-spinner alternative-text="Processing CSV" size="small" variant="brand">
+                    </lightning-spinner>
+                </div>
+                <div class="processing-text">
+                    <h3 class="processing-title">Processing Data Import...</h3>
+                    <p class="processing-subtitle">Executing bulk upsert batch job. Results update below in real-time as
+                        rows are processed.</p>
                 </div>
             </div>
 
@@ -85,14 +76,16 @@
              ============================================================ -->
         <template if:true={errorMessage}>
             <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium" role="alert">
-                <lightning-icon icon-name="utility:error" size="small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                <lightning-icon icon-name="utility:error" size="small" variant="inverse"
+                    class="slds-m-right_x-small"></lightning-icon>
                 <h2>{errorMessage}</h2>
             </div>
         </template>
 
         <template if:true={successMessage}>
             <div class="slds-notify slds-notify_alert slds-theme_success slds-m-top_medium" role="alert">
-                <lightning-icon icon-name="utility:success" size="small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                <lightning-icon icon-name="utility:success" size="small" variant="inverse"
+                    class="slds-m-right_x-small"></lightning-icon>
                 <h2>{successMessage}</h2>
             </div>
         </template>
@@ -164,24 +157,15 @@
             <div class="filter-bar">
                 <span class="filter-title">Import Row Results</span>
                 <div class="filter-btn-group">
-                    <lightning-button
-                        label="All Rows"
-                        data-filter="All"
-                        variant={isAllVariant}
+                    <lightning-button label="All Rows" data-filter="All" variant={isAllVariant}
                         onclick={handleFilterChange}>
                     </lightning-button>
 
-                    <lightning-button
-                        label="Successful"
-                        data-filter="Success"
-                        variant={isSuccessVariant}
+                    <lightning-button label="Successful" data-filter="Success" variant={isSuccessVariant}
                         onclick={handleFilterChange}>
                     </lightning-button>
 
-                    <lightning-button
-                        label="Failed"
-                        data-filter="Failed"
-                        variant={isFailedVariant}
+                    <lightning-button label="Failed" data-filter="Failed" variant={isFailedVariant}
                         onclick={handleFilterChange}>
                     </lightning-button>
                 </div>
@@ -190,10 +174,7 @@
             <!-- Datatable -->
             <template if:true={hasResults}>
                 <div class="datatable-wrapper">
-                    <lightning-datatable
-                        key-field="Id"
-                        data={filteredResults}
-                        columns={columns}
+                    <lightning-datatable key-field="Id" data={filteredResults} columns={columns}
                         hide-checkbox-column="true">
                     </lightning-datatable>
                 </div>
@@ -202,11 +183,23 @@
             <!-- Empty State -->
             <template if:true={isResultEmpty}>
                 <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
-                    </div>
-                    <h3 class="empty-state-title">No Row Results Found</h3>
-                    <p class="empty-state-desc">There are no records matching the selected filter ({selectedFilter}).</p>
+                    <template if:true={isProcessing}>
+                        <div class="empty-state-loading">
+                            <lightning-spinner alternative-text="Loading row results" size="small"
+                                variant="brand"></lightning-spinner>
+                        </div>
+                        <h3 class="empty-state-title slds-m-top_large">Processing CSV Rows...</h3>
+                        <p class="empty-state-desc">Import row results will appear here automatically as batch execution
+                            progresses.</p>
+                    </template>
+                    <template if:false={isProcessing}>
+                        <div class="empty-state-icon">
+                            <lightning-icon icon-name="utility:search" size="large"></lightning-icon>
+                        </div>
+                        <h3 class="empty-state-title">No Row Results Found</h3>
+                        <p class="empty-state-desc">There are no records matching the selected filter
+                            ({selectedFilter}).</p>
+                    </template>
                 </div>
             </template>
 

@@ -357,102 +357,68 @@ export default class ProductImport extends LightningElement {
 
 
     /*
-     * Check Batch Status
+     * Check Batch Status & Poll Results
      */
     async checkImportStatus() {
 
+        try {
+            const batch =
+                await getImportBatch({
+                    batchId: this.batchId
+                });
 
-        const batch =
+            this.importBatch = batch;
 
-            await getImportBatch({
+            /*
+             * Fetch row results in real-time on every status tick
+             * so processed rows appear live at the bottom while batch runs.
+             */
+            await this.loadRowResults();
 
-                batchId:
-                    this.batchId
+            if (
+                batch.Status__c === 'Queued'
+                ||
+                batch.Status__c === 'Processing'
+            ) {
 
-            });
+                this.isProcessing = true;
 
+                setTimeout(
+                    () => {
+                        this.checkImportStatus();
+                    },
+                    2000
+                );
 
+                return;
+            }
 
-        this.importBatch = batch;
+            this.isProcessing = false;
 
+            if (
+                batch.Status__c === 'Completed'
+            ) {
 
+                this.successMessage =
+                    'Import completed successfully.';
 
+            }
+            else {
 
-        if (
+                this.successMessage =
+                    'Import completed with errors.';
 
-            batch.Status__c === 'Queued'
-
-            ||
-
-            batch.Status__c === 'Processing'
-
-        ) {
-
-
-            this.isProcessing = true;
-
-
-
-            setTimeout(
-
-                () => {
-
-                    this.checkImportStatus();
-
-                },
-
-                2000
-
-            );
-
-
-
-            return;
-
+            }
         }
+        catch(error) {
 
+            this.isProcessing = false;
 
-
-
-
-        this.isProcessing = false;
-
-
-
-        await this.loadRowResults();
-
-
-
-
-        if (
-
-            batch.Status__c === 'Completed'
-
-        ) {
-
-
-
-            this.successMessage =
-                'Import completed successfully.';
-
-
+            this.errorMessage =
+                this.getErrorMessage(error);
         }
-
-        else {
-
-
-            this.successMessage =
-                'Import completed with errors.';
-
-
-        }
-
 
     }
-
-
-
-
 
 
     /*

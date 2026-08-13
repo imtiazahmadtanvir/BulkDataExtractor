@@ -135,7 +135,7 @@ public with sharing class ProductImportController {
      * Completed with Errors
      *
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static Import_Batch__c getImportBatch(
         Id batchId
     ) {
@@ -171,7 +171,7 @@ public with sharing class ProductImportController {
      * Returns one Import_Row_Result__c for each
      * processed CSV row.
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<Import_Row_Result__c> getRowResults(
         Id batchId,
         String filterStatus
