@@ -156,14 +156,8 @@ sf project deploy start --target-org MyTargetOrg --source-dir force-app/main/def
   2. Click the list view dropdown at the top-left (currently saying **"Recently Viewed"**).
   3. Select **"All"** or **"All Product Imports"**. All imported records will appear immediately.
 
-### Q2: What do the large numbers (e.g. `56` and `9`) mean on the Import Row Results Kanban View?
-- **Explanation**: When viewing `Import_Row_Result__c` in Salesforce's standard Kanban list view mode, Salesforce automatically calculates a **Kanban Summary Aggregate** summing up numeric fields (such as `Row_Number__c`).
-  - `56` under `Success (8)` represents the sum of the row numbers (`2 + 3 + 6 + 7 + 8 + 9 + 10 + 11 = 56`).
-  - `9` under `Failed (2)` represents the sum of the failed row numbers (`4 + 5 = 9`).
-  - The actual record counts are shown in parentheses: `Success (8)` means 8 records, `Failed (2)` means 2 records.
-- **Solution**: To view records in standard grid format, click the Display Options icon (top-right next to search bar) and switch from **Kanban** to **Table View**.
 
-### Q3: Why did my CSV import finish with `Completed with Errors`?
+### Q2: Why did my CSV import finish with `Completed with Errors`?
 - Check your CSV file for:
   - **Required Headers**: `SKU`, `Name`, `Price`, `Category`, `Region` (exact column names).
   - **Price Format**: Must be plain numeric values (e.g. `29.50`), without dollar signs (`$29.50`) or text (`USD 29.50`).

@@ -168,6 +168,12 @@
                     <lightning-button label="Failed" data-filter="Failed" variant={isFailedVariant}
                         onclick={handleFilterChange}>
                     </lightning-button>
+
+                    <template if:true={hasFailedRows}>
+                        <lightning-button label="Download Failed Rows CSV" icon-name="utility:download" variant="border-filled"
+                            onclick={handleDownloadFailedRows} class="slds-m-left_x-small">
+                        </lightning-button>
+                    </template>
                 </div>
             </div>
 

@@ -485,6 +485,51 @@ export default class ProductImport extends LightningElement {
         return this.importBatch && (!this.filteredResults || this.filteredResults.length === 0);
     }
 
+    get hasFailedRows() {
+        return this.importBatch && this.importBatch.Failure_Count__c > 0;
+    }
+
+    /*
+     * Download Failed Rows as CSV
+     */
+    async handleDownloadFailedRows() {
+        try {
+            const failedRows = await getRowResults({
+                batchId: this.batchId,
+                filterStatus: 'Failed'
+            });
+
+            if (!failedRows || failedRows.length === 0) {
+                this.showToast('Info', 'No failed rows found to download.', 'info');
+                return;
+            }
+
+            let csvContent = 'Row Number,Status,Error Message,Raw Row Data\n';
+
+            failedRows.forEach(row => {
+                const rowNum = row.Row_Number__c || '';
+                const status = row.Status__c || '';
+                const errorMsg = row.Error_Message__c ? `"${row.Error_Message__c.replace(/"/g, '""')}"` : '';
+                const rawData = row.Raw_Row_Data__c ? `"${row.Raw_Row_Data__c.replace(/"/g, '""')}"` : '';
+                csvContent += `${rowNum},${status},${errorMsg},${rawData}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `failed_rows_batch_${this.batchId}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            this.showToast('Success', `Downloaded ${failedRows.length} failed row(s) as CSV.`, 'success');
+        } catch (error) {
+            this.showToast('Error', 'Unable to download failed rows: ' + this.getErrorMessage(error), 'error');
+        }
+    }
+
 
 
 
